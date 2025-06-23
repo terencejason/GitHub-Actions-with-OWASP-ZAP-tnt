@@ -1,19 +1,30 @@
 const express = require('express');
-const escape = require('escape-html'); // ✅ Sanitize input
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
 
-// Home route
+// Utility function to escape HTML special characters
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ✅ Secure endpoint with escaped input
 app.get('/', (req, res) => {
-  res.send('<h1>Welcome to OWASP test app</h1>');
-});
-
-// Fixed XSS vulnerability
-app.get('/vuln', (req, res) => {
-  const name = escape(req.query.name); // ✅ Escape malicious input
-  res.send(`<h1>Hello ${name}</h1>`);
+  const rawName = req.query.name || 'World';
+  const name = escapeHtml(rawName); // ✅ Escape input before rendering
+  res.send(`
+    <h1>Hello, ${name}</h1>
+    <form action="/" method="GET">
+      <input type="text" name="name" placeholder="Enter your name" />
+      <button type="submit">Say Hi</button>
+    </form>
+  `);
 });
 
 app.listen(port, () => {
-  console.log(`App listening at http://localhost:${port}`);
+  console.log(`✅ Secure app listening at http://localhost:${port}`);
 });
